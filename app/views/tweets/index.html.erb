@@ -1,0 +1,41 @@
+<div class="container-fluid w-50 shadow mt-5 rounded border p-4 bg-muted">
+  <h1>Tweets</h1>
+  <p>Followers : <%= current_user.followers.count %></p>
+  <p>Following : <%= current_user.following.count %></p>
+
+  <%= link_to 'New Tweet', new_tweet_path, class: "btn btn-primary sm mb-1" %>
+
+  <% @tweets.each do |tweet| %>
+    <div class="text-center">
+    <p><b>Author : </b><%= tweet.user.email %>
+    <% unless current_user == tweet.user %>
+      <% if current_user.following?(tweet.user) %>
+        <%= form_for(current_user.active_relationships.find_by(followed_id: tweet.user.id), html: { method: :delete }) do |f| %>
+          <%= f.submit "Unfollow", class: "btn btn-danger" %>
+        <% end %>
+      <% else %>
+        <%= form_for(current_user.active_relationships.build) do |f| %>
+          <div><%= hidden_field_tag :followed_id, tweet.user.id %></div>
+          <%= f.submit "Follow", class: "btn btn-primary" %>
+        <% end %>
+      <% end %>
+    <% end %>
+
+    <p class="m-2"><%= tweet.content %></p>
+    <% if tweet.media.attached? %>
+      <% if tweet.media.content_type.start_with?('image/') %>
+        <%= image_tag tweet.media, class: "tweet-media", size: "200x100" %>
+      <% elsif tweet.media.content_type.start_with?('video/') %>
+          <%= video_tag(tweet.media, controls: true, type: 'video/mp4', size: "200x120") %>
+      <% end %>
+    <% end %>
+    <p><b>Posted <%= time_ago_in_words(tweet.created_at) %> ago</b></p>
+
+    <% if current_user == tweet.user %>
+      <%= link_to 'Edit', edit_tweet_path(tweet), class: "btn btn-primary " %>
+      <%= link_to 'Delete', tweet, data: {turbo_method: :delete, turbo_confirm: 'Are you sure?' }, class: "btn btn-danger" %>
+    <% end %>
+  </div>
+    <hr>
+  <% end %>
+</div>
